@@ -1,4 +1,6 @@
 fetch(window.location.href, {credentials:'include'}).then(r => console.log('fetch ok', r.status)).catch(e => console.log('fetch bloqueado:', e.message))
+console.log(performance.getEntriesByType('resource').filter(e => e.name.includes('m3u8')).map(e => e.name))
+
 
 <!DOCTYPE html>
 <html>
