@@ -5,43 +5,43 @@
   <title>XULADP — Descargador Webex</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    body { background: #1a1a2e; color: #e0e0e0; font-family: "Segoe UI", monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
     h1 { font-size: 22px; color: #00e5ff; letter-spacing: 2px; margin-bottom: 6px; }
     .subtitle { font-size: 12px; color: #666; margin-bottom: 40px; letter-spacing: 1px; }
     .card { background: #16213e; border: 1px solid #0f3460; border-radius: 12px; padding: 28px; width: 100%; max-width: 560px; margin-bottom: 20px; }
     .card h2 { font-size: 11px; color: #00e5ff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px; border-bottom: 1px solid #0f3460; padding-bottom: 10px; }
     .bm-wrap { display: flex; align-items: center; gap: 14px; }
-    .bm-btn { display: inline-block; padding: 14px 22px; background: linear-gradient(135deg, #00e5ff, #0072ff); color: #000; font-weight: bold; font-size: 13px; border-radius: 8px; text-decoration: none; cursor: grab; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,229,255,0.3); }
-    .bm-btn:hover { opacity: 0.85; }
-    .bm-hint { font-size: 11px; color: #888; line-height: 1.7; }
-    .bm-hint b { color: #ccc; }
-    textarea { width: 100%; height: 70px; background: #0d1b2a; color: #00e5ff; border: 1px solid #0f3460; border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 11px; resize: none; outline: none; transition: border 0.2s; margin-bottom: 10px; }
-    textarea:focus { border-color: #00e5ff; }
-    textarea::placeholder { color: #334; }
-    .dl-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #00c853, #00796b); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,200,83,0.3); transition: opacity 0.2s; }
-    .dl-btn:hover { opacity: 0.85; }
-    .dl-btn:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
-    #prog-wrap { display:none; margin-top: 12px; }
-    #prog-track { height: 8px; background: #0d1b2a; border-radius: 4px; overflow: hidden; }
-    #prog-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00e5ff, #00c853); border-radius: 4px; transition: width 0.2s; }
-    #stats-row { display: flex; gap: 10px; margin-top: 10px; }
-    .stat-box { flex: 1; background: #0d1b2a; border: 1px solid #0f3460; border-radius: 8px; padding: 10px 12px; text-align: center; }
-    .stat-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .stat-value { font-size: 18px; font-weight: bold; color: #00e5ff; font-family: monospace; }
-    .stat-unit { font-size: 10px; color: #666; margin-top: 2px; }
-    #status { display:none; margin-top: 12px; padding: 10px 14px; background: #0d1b2a; border-radius: 8px; border-left: 3px solid #00e5ff; font-size: 12px; color: #aaa; line-height: 1.7; }
-    #status.err { border-left-color: #ff5252; color: #ff8a80; }
-    #status.ok  { border-left-color: #00c853; color: #b9f6ca; }
-    ol { padding-left: 18px; }
-    ol li { font-size: 12px; color: #aaa; line-height: 2; }
-    ol li b { color: #e0e0e0; }
-    .tag { display:inline-block; background: #0f3460; color: #00e5ff; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-family: monospace; }
-    .warn { margin-top: 14px; padding: 10px 14px; background: #1a1000; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 11px; color: #ffc107; line-height: 1.7; }
+    .bm-btn { display:inline-block; padding:14px 22px; background:linear-gradient(135deg,#00e5ff,#0072ff); color:#000; font-weight:bold; font-size:13px; border-radius:8px; text-decoration:none; cursor:grab; white-space:nowrap; box-shadow:0 4px 15px rgba(0,229,255,0.3); }
+    .bm-hint { font-size:11px; color:#888; line-height:1.7; }
+    .bm-hint b { color:#ccc; }
+    textarea { width:100%; height:70px; background:#0d1b2a; color:#00e5ff; border:1px solid #0f3460; border-radius:8px; padding:10px 12px; font-family:monospace; font-size:11px; resize:none; outline:none; transition:border 0.2s; margin-bottom:10px; }
+    textarea:focus { border-color:#00e5ff; }
+    textarea::placeholder { color:#334; }
+    .dl-btn { width:100%; padding:14px; background:linear-gradient(135deg,#00c853,#00796b); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; letter-spacing:1px; box-shadow:0 4px 15px rgba(0,200,83,0.3); transition:opacity 0.2s; }
+    .dl-btn:hover { opacity:0.85; }
+    .dl-btn:disabled { background:#333; color:#555; cursor:not-allowed; box-shadow:none; }
+    #prog-wrap { display:none; margin-top:12px; }
+    #prog-track { height:8px; background:#0d1b2a; border-radius:4px; overflow:hidden; }
+    #prog-bar { height:100%; width:0%; background:linear-gradient(90deg,#00e5ff,#00c853); border-radius:4px; transition:width 0.2s; }
+    #stats-row { display:flex; gap:10px; margin-top:10px; }
+    .stat-box { flex:1; background:#0d1b2a; border:1px solid #0f3460; border-radius:8px; padding:10px 12px; text-align:center; }
+    .stat-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+    .stat-value { font-size:18px; font-weight:bold; color:#00e5ff; font-family:monospace; }
+    .stat-unit { font-size:10px; color:#666; margin-top:2px; }
+    #status { display:none; margin-top:12px; padding:10px 14px; background:#0d1b2a; border-radius:8px; border-left:3px solid #00e5ff; font-size:12px; color:#aaa; line-height:1.7; }
+    #status.err { border-left-color:#ff5252; color:#ff8a80; }
+    #status.ok  { border-left-color:#00c853; color:#b9f6ca; }
+    .badge { display:inline-block; background:#003320; color:#00c853; font-size:10px; padding:3px 8px; border-radius:4px; margin-left:8px; vertical-align:middle; border:1px solid #00c853; }
+    ol { padding-left:18px; }
+    ol li { font-size:12px; color:#aaa; line-height:2; }
+    ol li b { color:#e0e0e0; }
+    .tag { display:inline-block; background:#0f3460; color:#00e5ff; font-size:10px; padding:2px 7px; border-radius:4px; font-family:monospace; }
+    .warn { margin-top:14px; padding:10px 14px; background:#1a1000; border-left:3px solid #ffc107; border-radius:4px; font-size:11px; color:#ffc107; line-height:1.7; }
   </style>
 </head>
 <body>
   <h1>XULADP</h1>
-  <div class="subtitle">WEBEX HLS DOWNLOADER v3.5</div>
+  <div class="subtitle">WEBEX HLS DOWNLOADER v4.0 — STREAM TO DISK</div>
 
   <div class="card">
     <h2>① Instalar marcador (una sola vez)</h2>
@@ -52,7 +52,7 @@
   </div>
 
   <div class="card">
-    <h2>② Pegar URL y descargar</h2>
+    <h2>② Pegar URL y descargar <span class="badge">✓ ESCRIBE A DISCO — SIN RAM</span></h2>
     <textarea id="m3u8url" placeholder="Pega aquí la URL del .m3u8&#10;Ejemplo: https://bat1.webex.com/.../hls.m3u8?trackingid=..."></textarea>
     <button class="dl-btn" id="btnDl" onclick="iniciarDescarga()">⬇ DESCARGAR VÍDEO</button>
 
@@ -70,9 +70,9 @@
           <div class="stat-unit">transcurrido</div>
         </div>
         <div class="stat-box">
-          <div class="stat-label">Descargado</div>
+          <div class="stat-label">Escrito</div>
           <div class="stat-value" id="stat-mb">0</div>
-          <div class="stat-unit">MB</div>
+          <div class="stat-unit">MB en disco</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Fragmentos</div>
@@ -98,118 +98,267 @@
   </div>
 
   <script>
-    async function iniciarDescarga() {
-      const m3u8Url = document.getElementById('m3u8url').value.trim();
-      const btn = document.getElementById('btnDl');
-      const statusDiv = document.getElementById('status');
-      const progWrap = document.getElementById('prog-wrap');
-      const progBar = document.getElementById('prog-bar');
+    function log(msg, tipo) {
+      const d = document.getElementById("status");
+      d.style.display = "block";
+      d.className = tipo || "";
+      d.innerText = msg;
+    }
 
-      if (!m3u8Url || !m3u8Url.includes('m3u8')) {
-        mostrarEstado('Pega una URL válida que contenga .m3u8', 'err');
+    async function iniciarDescarga() {
+      const m3u8Url = document.getElementById("m3u8url").value.trim();
+      const btn = document.getElementById("btnDl");
+
+      if (!m3u8Url || !m3u8Url.includes("m3u8")) {
+        log("Pega una URL válida que contenga .m3u8", "err");
+        return;
+      }
+
+      // Comprobar soporte File System Access API
+      if (!window.showSaveFilePicker) {
+        log("ERROR: Tu navegador no soporta escritura directa a disco (necesita Chrome 86+). Actualiza Chrome.", "err");
         return;
       }
 
       btn.disabled = true;
-      progWrap.style.display = 'block';
-      progBar.style.width = '0%';
+      document.getElementById("prog-wrap").style.display = "block";
 
-      // Cronómetro
       const startTime = Date.now();
       let totalBytes = 0;
-      let timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const mins = Math.floor(elapsed / 60);
-        const secs = String(elapsed % 60).padStart(2, '0');
-        document.getElementById('stat-time').innerText = mins + ':' + secs;
-        const elapsedSec = (Date.now() - startTime) / 1000;
-        const mbps = elapsedSec > 0 ? (totalBytes / 1048576 / elapsedSec).toFixed(2) : '0.00';
-        document.getElementById('stat-speed').innerText = mbps;
+
+      const timer = setInterval(() => {
+        const sec = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById("stat-time").innerText = Math.floor(sec/60) + ":" + String(sec%60).padStart(2,"0");
+        const mbps = totalBytes > 0 ? (totalBytes / 1048576 / ((Date.now()-startTime)/1000)).toFixed(2) : "—";
+        document.getElementById("stat-speed").innerText = mbps;
       }, 500);
 
-      function mostrarEstado(msg, tipo) {
-        statusDiv.style.display = 'block';
-        statusDiv.className = tipo || '';
-        statusDiv.innerText = msg;
-      }
-
       try {
-        mostrarEstado('Leyendo playlist...');
-        let res = await fetch(m3u8Url, { credentials: 'omit' });
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' — ¿URL expirada?');
+        log("Leyendo playlist...");
+        let res = await fetch(m3u8Url, { credentials: "omit" });
+        if (!res.ok) throw new Error("HTTP " + res.status + " — ¿URL expirada?");
         let text = await res.text();
         let target = m3u8Url;
 
-        if (text.includes('#EXT-X-STREAM-INF')) {
-          mostrarEstado('Master playlist. Seleccionando máxima calidad...');
+        if (text.includes("#EXT-X-STREAM-INF")) {
+          log("Master playlist. Seleccionando máxima calidad...");
           let bestUrl = null, bestBw = -1;
-          let lines = text.split('\n');
-          for (let i = 0; i < lines.length; i++) {
-            let l = lines[i].trim();
-            if (l.startsWith('#EXT-X-STREAM-INF')) {
-              let bw = parseInt((l.match(/BANDWIDTH=(\d+)/) || [0, 0])[1]);
-              let nx = (lines[i + 1] || '').trim();
-              if (nx && nx[0] !== '#' && bw >= bestBw) { bestBw = bw; bestUrl = new URL(nx, m3u8Url).href; }
+          text.split("\n").forEach((l, i, arr) => {
+            l = l.trim();
+            if (l.startsWith("#EXT-X-STREAM-INF")) {
+              const bw = parseInt((l.match(/BANDWIDTH=(\d+)/) || [0,0])[1]);
+              const nx = (arr[i+1]||"").trim();
+              if (nx && nx[0] !== "#" && bw >= bestBw) { bestBw = bw; bestUrl = new URL(nx, m3u8Url).href; }
             }
-          }
-          if (!bestUrl) throw new Error('Sin variante válida');
+          });
+          if (!bestUrl) throw new Error("Sin variante válida");
           target = bestUrl;
-          let r2 = await fetch(target, { credentials: 'omit' });
-          if (!r2.ok) throw new Error('HTTP ' + r2.status);
+          const r2 = await fetch(target, { credentials: "omit" });
+          if (!r2.ok) throw new Error("HTTP " + r2.status);
           text = await r2.text();
         }
 
-        const segs = text.split('\n').map(l => l.trim()).filter(l => l && l[0] !== '#');
-        if (!segs.length) throw new Error('No se encontraron segmentos');
-        document.getElementById('stat-frags').innerText = '0/' + segs.length;
+        const segs = text.split("\n").map(l => l.trim()).filter(l => l && l[0] !== "#");
+        if (!segs.length) throw new Error("No se encontraron segmentos");
+        document.getElementById("stat-frags").innerText = "0/" + segs.length;
+        log("Se encontraron " + segs.length + " fragmentos. Elige dónde guardar el fichero...");
 
-        const CONCURRENCY = 8;
-        const chunks = new Array(segs.length);
+        // Pedir al usuario dónde guardar — abre diálogo de Windows
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: "webex_video.ts",
+          types: [{ description: "Video TS", accept: { "video/mp2t": [".ts"] } }]
+        });
+        const writable = await fileHandle.createWritable();
+
+        log("Descargando y escribiendo en disco...");
         let done = 0;
+        const CONCURRENCY = 6;
 
+        // Descarga secuencial por grupos pero escribe inmediatamente
+        // No acumula en RAM — cada grupo se escribe y se libera
         for (let i = 0; i < segs.length; i += CONCURRENCY) {
           const batch = segs.slice(i, i + CONCURRENCY);
-          await Promise.all(batch.map((seg, j) =>
-            fetch(new URL(seg, target).href, { credentials: 'omit' })
-              .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' fragmento ' + (i+j+1)); return r.arrayBuffer(); })
-              .then(buf => {
-                chunks[i + j] = new Uint8Array(buf);
-                done++;
-                totalBytes += buf.byteLength;
-                progBar.style.width = Math.round(done / segs.length * 100) + '%';
-                document.getElementById('stat-frags').innerText = done + '/' + segs.length;
-                document.getElementById('stat-mb').innerText = (totalBytes / 1048576).toFixed(1);
-                mostrarEstado('Descargando: ' + done + ' / ' + segs.length + ' fragmentos...');
-              })
-          ));
+          // Descargar batch en paralelo
+          const buffers = await Promise.all(
+            batch.map((seg, j) =>
+              fetch(new URL(seg, target).href, { credentials: "omit" })
+                .then(r => { if (!r.ok) throw new Error("HTTP " + r.status + " fragmento " + (i+j+1)); return r.arrayBuffer(); })
+            )
+          );
+          // Escribir cada buffer al disco y liberar memoria
+          for (const buf of buffers) {
+            await writable.write(buf);
+            totalBytes += buf.byteLength;
+            done++;
+            document.getElementById("stat-mb").innerText = (totalBytes/1048576).toFixed(1);
+            document.getElementById("stat-frags").innerText = done + "/" + segs.length;
+            document.getElementById("prog-bar").style.width = Math.round(done/segs.length*100) + "%";
+          }
+          log("Escribiendo en disco: " + done + "/" + segs.length + " fragmentos...");
         }
 
-        clearInterval(timerInterval);
-        mostrarEstado('Fusionando fragmentos...');
-        const total = chunks.reduce((a, c) => a + c.length, 0);
-        const merged = new Uint8Array(total);
-        let off = 0;
-        for (const c of chunks) { merged.set(c, off); off += c.length; }
+        await writable.close();
+        clearInterval(timer);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        const title = (document.title || 'webex_video').replace(/[^a-z0-9 _-]/gi, '_').substring(0, 60) || 'webex_video';
-        const blob = new Blob([merged], { type: 'video/mp4' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = title + '.mp4';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        progBar.style.width = '100%';
-        mostrarEstado('✅ COMPLETADO en ' + elapsed + 's — ' + (totalBytes/1048576).toFixed(1) + ' MB descargados → ' + title + '.mp4', 'ok');
+        document.getElementById("prog-bar").style.width = "100%";
+        log("✅ COMPLETADO en " + elapsed + "s — " + (totalBytes/1048576).toFixed(1) + " MB escritos a disco directamente.", "ok");
         btn.disabled = false;
 
       } catch (e) {
-        clearInterval(timerInterval);
-        mostrarEstado('❌ ERROR: ' + e.message, 'err');
+        clearInterval(timer);
+        if (e.name === "AbortError") {
+          log("Cancelado por el usuario.", "err");
+        } else {
+          log("❌ ERROR: " + e.message, "err");
+        }
         btn.disabled = false;
       }
     }
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+# XULADP - Descargador Webex HLS via PowerShell
+# Uso: pega este script en PowerShell y cuando pregunte, pega la URL del m3u8
+
+Write-Host ""
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "   XULADP - Descargador Webex HLS v1.0" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host ""
+
+# 1. Buscar ffmpeg automaticamente
+Write-Host "[1/4] Buscando ffmpeg en el sistema..." -ForegroundColor Yellow
+
+$ffmpeg = $null
+
+# Primero probar si esta en el PATH
+try {
+    $null = & ffmpeg -version 2>&1
+    $ffmpeg = "ffmpeg"
+    Write-Host "      ffmpeg encontrado en PATH" -ForegroundColor Green
+} catch {}
+
+# Si no, buscar en rutas tipicas
+if (-not $ffmpeg) {
+    $rutas = @(
+        "$env:USERPROFILE\Downloads\ffmpeg.exe",
+        "$env:USERPROFILE\Desktop\ffmpeg.exe",
+        "$env:USERPROFILE\ffmpeg\bin\ffmpeg.exe",
+        "$env:LOCALAPPDATA\ffmpeg\bin\ffmpeg.exe",
+        "C:\ffmpeg\bin\ffmpeg.exe",
+        "C:\ffmpeg\ffmpeg.exe",
+        "C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+        "C:\Program Files (x86)\ffmpeg\bin\ffmpeg.exe",
+        "C:\tools\ffmpeg\bin\ffmpeg.exe",
+        "C:\tools\ffmpeg.exe"
+    )
+    foreach ($ruta in $rutas) {
+        if (Test-Path $ruta) {
+            $ffmpeg = $ruta
+            Write-Host "      ffmpeg encontrado en: $ruta" -ForegroundColor Green
+            break
+        }
+    }
+}
+
+# Si todavia no, busqueda profunda (mas lenta)
+if (-not $ffmpeg) {
+    Write-Host "      No encontrado en rutas tipicas. Buscando en disco..." -ForegroundColor Yellow
+    $encontrado = Get-ChildItem -Path "C:\", "$env:USERPROFILE" -Recurse -Filter "ffmpeg.exe" -ErrorAction SilentlyContinue 2>$null | Select-Object -First 1
+    if ($encontrado) {
+        $ffmpeg = $encontrado.FullName
+        Write-Host "      ffmpeg encontrado en: $ffmpeg" -ForegroundColor Green
+    }
+}
+
+if (-not $ffmpeg) {
+    Write-Host ""
+    Write-Host "ERROR: No se encontro ffmpeg.exe en el sistema." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Opciones:" -ForegroundColor Yellow
+    Write-Host "  1. Descarga ffmpeg de https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+    Write-Host "  2. Extrae ffmpeg.exe a C:\ffmpeg\bin\"
+    Write-Host "  3. Vuelve a ejecutar este script"
+    Write-Host ""
+    Read-Host "Pulsa Enter para salir"
+    exit 1
+}
+
+# 2. Pedir URL
+Write-Host ""
+Write-Host "[2/4] Pega la URL del m3u8 (F12 -> Network -> m3u8 -> Copy URL):" -ForegroundColor Yellow
+Write-Host "      (La URL expira en ~2 min, usala rapido)" -ForegroundColor DarkYellow
+Write-Host ""
+$m3u8Url = Read-Host "URL"
+
+if (-not $m3u8Url -or -not $m3u8Url.Contains("m3u8")) {
+    Write-Host "ERROR: URL no valida." -ForegroundColor Red
+    Read-Host "Pulsa Enter para salir"
+    exit 1
+}
+
+# 3. Nombre del fichero de salida
+Write-Host ""
+Write-Host "[3/4] Nombre del fichero de salida (sin extension, Enter para 'webex_video'):" -ForegroundColor Yellow
+$nombre = Read-Host "Nombre"
+if (-not $nombre) { $nombre = "webex_video" }
+$nombre = $nombre -replace '[\\/:*?"<>|]', '_'
+
+# Carpeta de salida: Escritorio del usuario
+$salida = "$env:USERPROFILE\Desktop\$nombre.mp4"
+Write-Host "      Guardando en: $salida" -ForegroundColor Green
+
+# 4. Descargar con ffmpeg
+Write-Host ""
+Write-Host "[4/4] Iniciando descarga..." -ForegroundColor Yellow
+Write-Host "      Esto puede tardar varios minutos segun la duracion del video." -ForegroundColor DarkYellow
+Write-Host "      NO cierres esta ventana." -ForegroundColor Red
+Write-Host ""
+
+$inicio = Get-Date
+
+# ffmpeg con maxima velocidad:
+# -protocol_whitelist: permite https y crypto (segmentos cifrados)
+# -allowed_extensions: acepta todos los tipos
+# -c copy: copia sin recodificar (rapido)
+# -bsf:a aac_adtstoasc: fix para audio AAC en MP4
+# -threads 0: usa todos los nucleos disponibles
+& $ffmpeg `
+    -protocol_whitelist "file,http,https,tcp,tls,crypto" `
+    -allowed_extensions ALL `
+    -i "$m3u8Url" `
+    -c copy `
+    -bsf:a aac_adtstoasc `
+    -threads 0 `
+    -y `
+    "$salida"
+
+$fin = Get-Date
+$duracion = [math]::Round(($fin - $inicio).TotalSeconds, 1)
+
+Write-Host ""
+if (Test-Path $salida) {
+    $tamano = [math]::Round((Get-Item $salida).Length / 1MB, 1)
+    Write-Host "================================================" -ForegroundColor Green
+    Write-Host "   DESCARGA COMPLETADA" -ForegroundColor Green
+    Write-Host "   Fichero: $salida" -ForegroundColor Green
+    Write-Host "   Tamano:  $tamano MB" -ForegroundColor Green
+    Write-Host "   Tiempo:  $duracion segundos" -ForegroundColor Green
+    Write-Host "================================================" -ForegroundColor Green
+} else {
+    Write-Host "ERROR: El fichero no se genero. Revisa los mensajes de arriba." -ForegroundColor Red
+}
+
+Write-Host ""
+Read-Host "Pulsa Enter para salir"
