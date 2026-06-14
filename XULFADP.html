@@ -1,3 +1,5 @@
+fetch(window.location.href, {credentials:'include'}).then(r => console.log('fetch ok', r.status)).catch(e => console.log('fetch bloqueado:', e.message))
+
 <!DOCTYPE html>
 <html>
 <head>
