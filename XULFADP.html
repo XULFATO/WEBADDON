@@ -2,6 +2,22 @@ fetch(window.location.href, {credentials:'include'}).then(r => console.log('fetc
 console.log(performance.getEntriesByType('resource').filter(e => e.name.includes('m3u8')).map(e => e.name))
 
 
+const _f = window.fetch;
+window.fetch = async function(){
+  const url = typeof arguments[0]==='string' ? arguments[0] : (arguments[0]?.url||'');
+  if(url.includes('m3u8')) console.log('M3U8 CAPTURADO:', url);
+  return _f.apply(this, arguments);
+};
+const _x = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(m, url){
+  if(url && url.includes('m3u8')) console.log('M3U8 XHR:', url);
+  return _x.apply(this, arguments);
+};
+console.log('Interceptor activo. Dale Play ahora.');
+
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
