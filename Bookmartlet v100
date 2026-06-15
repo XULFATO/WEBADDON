@@ -25,12 +25,12 @@
 </head>
 <body>
   <h1>XULADP</h1>
-  <div class="subtitle">WEBEX DOWNLOADER v5.0 — ONE CLICK</div>
+  <div class="subtitle">WEBEX DOWNLOADER v5.1 — ONE CLICK</div>
 
   <div class="card">
     <h2>① Instalar — arrastra a la barra de marcadores <span class="badge">solo una vez</span></h2>
     <div class="bm-wrap">
-      <a class="bm-btn" href="javascript:(function(){ var title = document.querySelector('h1.recordingtitle'); var nombre = title ? title.innerText.trim().replace(/[^a-z0-9áéíóúñü ._-]/gi,'_').substring(0,80) : 'webex_video'; var match = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+merge_\d+_\d+\.mp4[^\s&quot;'<>]*/); if(!match){ var match2 = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+\.mp4[^\s&quot;'<>]*/); if(!match2){ alert('XULADP: No se encontró el fichero MP4 en la página.\nAsegúrate de que el vídeo esté cargado.'); return; } match = match2; } var url = match[0]; var a = document.createElement('a'); a.href = url; a.download = nombre + '.mp4'; a.target = '_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a); var ui = document.createElement('div'); ui.style.cssText = 'position:fixed;top:10px;right:10px;z-index:2147483647;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:14px;border:2px solid #0f0;border-radius:8px;box-shadow:0 0 20px rgba(0,255,0,0.3);max-width:320px'; ui.innerHTML = '<b>[XULADP]</b><br><br>✅ Descargando:<br>' + nombre + '.mp4<br><br><span style=&quot;color:#aaa;font-size:10px&quot;>Cierra esto cuando quieras</span> <span id=&quot;_xclose&quot; style=&quot;float:right;cursor:pointer;color:#f44&quot;>✕</span>'; document.body.appendChild(ui); document.getElementById('_xclose').onclick = function(){ ui.remove(); }; })();">▼ XULADP</a>
+      <a class="bm-btn" href="javascript:(function(){ var title = document.querySelector('h1.recordingtitle'); var nombre = title ? title.innerText.trim().replace(/[^a-z0-9áéíóúñü ._-]/gi,'_').substring(0,80) : 'webex_video'; var match = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+merge_\d+_\d+\.mp4[^\s&quot;'<>]*/); if(!match){ var match2 = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+\.mp4[^\s&quot;'<>]*/); if(!match2){ alert('XULADP: No se encontro el MP4. Asegurate de que el video este cargado.'); return; } match = match2; } var url = match[0]; var iframe = document.createElement('iframe'); iframe.style.display = 'none'; iframe.src = url; document.body.appendChild(iframe); setTimeout(function(){ document.body.removeChild(iframe); }, 5000); var ui = document.createElement('div'); ui.style.cssText = 'position:fixed;top:10px;right:10px;z-index:2147483647;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:14px;border:2px solid #0f0;border-radius:8px;box-shadow:0 0 20px rgba(0,255,0,0.3);max-width:320px'; ui.innerHTML = '<b>[XULADP]</b><br><br>Descargando:<br><span style=&quot;color:#ff0&quot;>' + nombre + '.mp4</span><br><br><span style=&quot;color:#aaa;font-size:10px&quot;>El video sigue reproduciendose</span> <span id=&quot;_xc&quot; style=&quot;float:right;cursor:pointer;color:#f44&quot;>x</span>'; document.body.appendChild(ui); document.getElementById('_xc').onclick = function(){ ui.remove(); }; })();">▼ XULADP</a>
       <div class="bm-hint">Arrastra este botón a tu<br><b>barra de marcadores</b><br><span style="color:#555">Ctrl+Shift+B si no la ves</span></div>
     </div>
   </div>
@@ -38,14 +38,14 @@
   <div class="card">
     <h2>② Usar</h2>
     <ol>
-      <li>Abre la grabación de Webex</li>
-      <li>Espera a que cargue el vídeo</li>
+      <li>Abre la grabación de Webex y espera a que cargue</li>
       <li>Haz clic en <b>▼ XULADP</b> en la barra de marcadores</li>
-      <li>El vídeo se descarga automáticamente con el <b>título de la grabación</b></li>
+      <li>Aparece panel verde — el vídeo <b>sigue reproduciéndose</b></li>
+      <li>La descarga aparece en la barra de descargas de Chrome</li>
     </ol>
     <div class="note">
-      El fichero se llama igual que el título de la grabación (<b>h1.recordingtitle</b>).<br>
-      Formato <b>.mp4</b> — abre directamente con Windows Media Player.
+      El fichero se nombra automáticamente con el título de la grabación.<br>
+      Formato <b>.mp4</b> — abre con Windows Media Player directamente.
     </div>
   </div>
 
