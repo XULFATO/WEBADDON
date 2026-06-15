@@ -25,12 +25,12 @@
 </head>
 <body>
   <h1>XULADP</h1>
-  <div class="subtitle">WEBEX DOWNLOADER v5.1 — ONE CLICK</div>
+  <div class="subtitle">WEBEX DOWNLOADER v5.2</div>
 
   <div class="card">
     <h2>① Instalar — arrastra a la barra de marcadores <span class="badge">solo una vez</span></h2>
     <div class="bm-wrap">
-      <a class="bm-btn" href="javascript:(function(){ var title = document.querySelector('h1.recordingtitle'); var nombre = title ? title.innerText.trim().replace(/[^a-z0-9áéíóúñü ._-]/gi,'_').substring(0,80) : 'webex_video'; var match = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+merge_\d+_\d+\.mp4[^\s&quot;'<>]*/); if(!match){ var match2 = document.documentElement.innerHTML.match(/https?:\/\/[^\s&quot;'<>]+\.mp4[^\s&quot;'<>]*/); if(!match2){ alert('XULADP: No se encontro el MP4. Asegurate de que el video este cargado.'); return; } match = match2; } var url = match[0]; var iframe = document.createElement('iframe'); iframe.style.display = 'none'; iframe.src = url; document.body.appendChild(iframe); setTimeout(function(){ document.body.removeChild(iframe); }, 5000); var ui = document.createElement('div'); ui.style.cssText = 'position:fixed;top:10px;right:10px;z-index:2147483647;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:14px;border:2px solid #0f0;border-radius:8px;box-shadow:0 0 20px rgba(0,255,0,0.3);max-width:320px'; ui.innerHTML = '<b>[XULADP]</b><br><br>Descargando:<br><span style=&quot;color:#ff0&quot;>' + nombre + '.mp4</span><br><br><span style=&quot;color:#aaa;font-size:10px&quot;>El video sigue reproduciendose</span> <span id=&quot;_xc&quot; style=&quot;float:right;cursor:pointer;color:#f44&quot;>x</span>'; document.body.appendChild(ui); document.getElementById('_xc').onclick = function(){ ui.remove(); }; })();">▼ XULADP</a>
+      <a class="bm-btn" href="javascript:(function(){ if(window._xuladp){ alert('XULADP ya activo'); return; } window._xuladp = true; var ui = document.createElement('div'); ui.style.cssText = 'position:fixed;top:10px;right:10px;z-index:2147483647;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:14px;border:2px solid #0f0;border-radius:8px;max-width:300px'; ui.innerHTML = '<b>[XULADP]</b> <span id=&quot;_xc&quot; style=&quot;float:right;cursor:pointer;color:#f44&quot;>x</span><div id=&quot;_xl&quot; style=&quot;margin-top:8px;color:#ff0&quot;>Esperando peticion MP4...<br>Reproduce el video ahora.</div>'; document.body.appendChild(ui); document.getElementById('_xc').onclick = function(){ ui.remove(); window._xuladp=false; window.fetch=_of; XMLHttpRequest.prototype.open=_ox; }; var _of = window.fetch; var _ox = XMLHttpRequest.prototype.open; var captured = false; function descargar(url){ if(captured) return; captured = true; window.fetch = _of; XMLHttpRequest.prototype.open = _ox; var title = document.querySelector('h1.recordingtitle'); var nombre = title ? title.innerText.trim().replace(/[^a-z0-9áéíóúñü ._-]/gi,'_').substring(0,80) : 'webex_video'; document.getElementById('_xl').innerHTML = 'Descargando:<br><span style=&quot;color:#0f0&quot;>' + nombre + '</span>'; var a = document.createElement('a'); a.href = url; a.download = nombre + '.mp4'; document.body.appendChild(a); a.click(); document.body.removeChild(a); } window.fetch = function(){ var url = typeof arguments[0]==='string' ? arguments[0] : (arguments[0] &amp;&amp; arguments[0].url ? arguments[0].url : ''); if(!captured &amp;&amp; url.indexOf('.mp4') !== -1 &amp;&amp; url.indexOf('merge_') !== -1) descargar(url); return _of.apply(this, arguments); }; XMLHttpRequest.prototype.open = function(m, url){ if(!captured &amp;&amp; typeof url==='string' &amp;&amp; url.indexOf('.mp4') !== -1 &amp;&amp; url.indexOf('merge_') !== -1) descargar(url); return _ox.apply(this, arguments); }; })();">▼ XULADP</a>
       <div class="bm-hint">Arrastra este botón a tu<br><b>barra de marcadores</b><br><span style="color:#555">Ctrl+Shift+B si no la ves</span></div>
     </div>
   </div>
@@ -38,14 +38,15 @@
   <div class="card">
     <h2>② Usar</h2>
     <ol>
-      <li>Abre la grabación de Webex y espera a que cargue</li>
-      <li>Haz clic en <b>▼ XULADP</b> en la barra de marcadores</li>
-      <li>Aparece panel verde — el vídeo <b>sigue reproduciéndose</b></li>
-      <li>La descarga aparece en la barra de descargas de Chrome</li>
+      <li>Abre la grabación de Webex</li>
+      <li>Haz clic en <b>▼ XULADP</b> — aparece panel verde</li>
+      <li>Dale <b>Play</b> al vídeo</li>
+      <li>El panel confirma la descarga automáticamente</li>
     </ol>
     <div class="note">
-      El fichero se nombra automáticamente con el título de la grabación.<br>
-      Formato <b>.mp4</b> — abre con Windows Media Player directamente.
+      El fichero se nombra con el título de la grabación (<b>h1.recordingtitle</b>).<br>
+      Formato <b>.mp4</b> — abre con Windows Media Player directamente.<br>
+      <b>La pestaña del vídeo no se toca.</b>
     </div>
   </div>
 
