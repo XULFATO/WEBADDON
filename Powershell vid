@@ -1,3 +1,7 @@
+ffmpeg -protocol_whitelist "file,http,https,tcp,tls,crypto" -allowed_extensions ALL -i "PEGA_AQUI_LA_URL" 2>&1 | Select-String -Pattern "Stream|Duration|Video|Audio|start"
+
+
+
 Write-Host "" ; Write-Host "XULADP - Descargador Webex HLS v1.1" -ForegroundColor Cyan ; Write-Host ""
 
 $ffmpeg = $null
