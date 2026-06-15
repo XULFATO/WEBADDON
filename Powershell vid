@@ -1,0 +1,42 @@
+Write-Host "" ; Write-Host "XULADP - Descargador Webex HLS v1.1" -ForegroundColor Cyan ; Write-Host ""
+
+$ffmpeg = $null
+try { $null = & ffmpeg -version 2>&1; $ffmpeg = "ffmpeg"; Write-Host "ffmpeg encontrado en PATH" -ForegroundColor Green } catch {}
+
+if (-not $ffmpeg) {
+    $rutas = @("$env:USERPROFILE\Downloads\ffmpeg.exe","$env:USERPROFILE\Desktop\ffmpeg.exe","$env:USERPROFILE\ffmpeg\bin\ffmpeg.exe","$env:LOCALAPPDATA\ffmpeg\bin\ffmpeg.exe","C:\ffmpeg\bin\ffmpeg.exe","C:\ffmpeg\ffmpeg.exe","C:\Program Files\ffmpeg\bin\ffmpeg.exe","C:\tools\ffmpeg\bin\ffmpeg.exe")
+    foreach ($ruta in $rutas) { if (Test-Path $ruta) { $ffmpeg = $ruta; Write-Host "ffmpeg en: $ruta" -ForegroundColor Green; break } }
+}
+
+if (-not $ffmpeg) {
+    Write-Host "Buscando en disco..." -ForegroundColor Yellow
+    $e = Get-ChildItem -Path "C:\","$env:USERPROFILE" -Recurse -Filter "ffmpeg.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($e) { $ffmpeg = $e.FullName; Write-Host "ffmpeg en: $ffmpeg" -ForegroundColor Green }
+}
+
+if (-not $ffmpeg) { Write-Host "ERROR: No se encontro ffmpeg" -ForegroundColor Red; Read-Host "Enter para salir"; exit }
+
+Write-Host "" ; Write-Host "Pega la URL del m3u8 (F12 -> Network -> m3u8 -> Copy URL):" -ForegroundColor Yellow
+$m3u8Url = Read-Host "URL"
+if (-not $m3u8Url -or -not $m3u8Url.Contains("m3u8")) { Write-Host "URL no valida" -ForegroundColor Red; Read-Host; exit }
+
+Write-Host "Nombre del fichero (Enter para 'webex_video'):" -ForegroundColor Yellow
+$nombre = Read-Host "Nombre"
+if (-not $nombre) { $nombre = "webex_video" }
+$nombre = $nombre -replace '[\\/:*?"<>|]','_'
+$salida = "$env:USERPROFILE\Desktop\$nombre.mp4"
+Write-Host "Guardando en: $salida" -ForegroundColor Green
+
+Write-Host "" ; Write-Host "Descargando... NO cierres esta ventana." -ForegroundColor Red ; Write-Host ""
+$inicio = Get-Date
+
+& $ffmpeg -protocol_whitelist "file,http,https,tcp,tls,crypto" -allowed_extensions ALL -fflags +genpts+discardcorrupt -i "$m3u8Url" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k -movflags +faststart -threads 0 -y "$salida"
+
+$dur = [math]::Round(((Get-Date) - $inicio).TotalSeconds, 1)
+if (Test-Path $salida) {
+    $mb = [math]::Round((Get-Item $salida).Length / 1MB, 1)
+    Write-Host "" ; Write-Host "COMPLETADO — $mb MB en $dur segundos — $salida" -ForegroundColor Green
+} else {
+    Write-Host "ERROR: El fichero no se genero" -ForegroundColor Red
+}
+Read-Host "Enter para salir"
