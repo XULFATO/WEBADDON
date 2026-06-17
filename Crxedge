@@ -3,16 +3,16 @@ manifest.json
 
 {
   "manifest_version": 3,
-  "name": "XULADP — Webex Downloader",
-  "version": "5.4",
-  "description": "Captura y descarga grabaciones de Webex con el nombre real de la reunión. Uso personal.",
+  "name": "XULADP",
+  "version": "5.5",
+  "description": "Descarga grabaciones de Webex con el nombre del titulo.",
+  "icons": { "48": "icon.png" },
   "content_scripts": [
     {
-      "matches": ["*://*.webex.com/*"],
+      "matches": ["*://adpmeet.webex.com/webapping/sites/adpmeet/recording/*"],
       "js": ["content.js"],
       "world": "MAIN",
-      "run_at": "document_start",
-      "all_frames": false
+      "run_at": "document_start"
     }
   ]
 }
@@ -20,218 +20,124 @@ manifest.json
 
 content.js
 
-// ============================================================
-// XULADP — Descargador de grabaciones Webex
-// v5.4 — pasado de bookmarklet a extensión (Manifest V3)
-// ============================================================
-//
-// Notas para mí (que si no en 3 meses no me acuerdo de nada):
-//
-// - "world": "MAIN" en el manifest hace que este script corra
-//   en el contexto REAL de la página, no en el mundo aislado
-//   de las extensiones. Lo necesito porque si no, el fetch que
-//   pisco no es el mismo fetch que usa Webex para pedir el vídeo
-//   (cada "mundo" tiene su propio window.fetch).
-//   Por eso aquí dentro NO puedo usar chrome.* (downloads, etc),
-//   estoy literalmente disfrazado de script de la página.
-//
-// - "run_at": "document_start" para que el parche de fetch/XHR
-//   esté puesto ANTES de que el reproductor de Webex pida nada.
-//   Si esto se inyecta tarde, me como la petición del vídeo y
-//   ya no hay segunda oportunidad.
-//
-// - Lo que cambia respecto al bookmarklet v5.3:
-//     1) el nombre del fichero ahora sale bien. El bug era que
-//        sólo miraba "h1.recordingtitle" (todo minúsculas) y a
-//        veces Webex lo pinta como "recordingTitle". Ahora
-//        pruebo varias variantes.
-//     2) fuera el panelazo verde de antes. Ahora hay un botón
-//        redondo abajo a la derecha, sin texto (solo una flecha),
-//        que cambia de color/animación según el estado. Discreto.
-//     3) probé a que esperara mi clic en vez de bajar sola, pero
-//        la URL del mp4 va con un token que caduca rápido y para
-//        cuando pulsaba ya había muerto (403). Así que sigue
-//        bajando sola en cuanto la pilla, como en el bookmarklet;
-//        el botón es sobre todo indicador de estado + reintento.
-//
-// - Si algún día hay varios vídeos en la misma página (tipo
-//   playlist de capítulos) esto sólo pilla el primero. Si pasa,
-//   recargar página entre vídeo y vídeo.
-// ============================================================
-
 (function () {
-  if (window._xuladpLoaded) return; // por si se inyecta dos veces
-  window._xuladpLoaded = true;
+  if (window._xuladp) return;
+  window._xuladp = true;
 
-  const ORIGINAL_FETCH = window.fetch;
-  const ORIGINAL_XHR_OPEN = XMLHttpRequest.prototype.open;
+  var origFetch = window.fetch;
+  var origOpen = XMLHttpRequest.prototype.open;
+  var videoUrl = null;
+  var working = false;
+  var done = false;
 
-  let capturedUrl = null;
-  let downloading = false;
-  let done = false;
-
-  // --- estilos del botón (inyectados una vez, con las animaciones) ---
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes _xuladp_spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes _xuladp_pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.85; } }
-    #_xuladp_btn { transition: background .25s ease, color .25s ease, opacity .25s ease; }
-    #_xuladp_btn.xu-listo { animation: _xuladp_pulse 2s ease-in-out infinite; }
-    #_xuladp_btn.xu-bajando svg { animation: _xuladp_spin 1s linear infinite; }
-  `;
-  document.documentElement.appendChild(style);
-
-  // --- el botón en sí: solo una flecha, sin texto, tooltip nativo ---
-  const btn = document.createElement('div');
+  var btn = document.createElement('div');
   btn.id = '_xuladp_btn';
-  btn.style.cssText = `
-    position: fixed;
-    bottom: 22px;
-    right: 22px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #2a2a3a;
-    color: #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: default;
-    z-index: 2147483647;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.45);
-    opacity: 0.5;
-  `;
-  // flecha en SVG en vez de caracter unicode: así la puedo girar
-  // limpiamente cuando está "bajando" sin que se vea cutre
-  btn.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="3" x2="12" y2="15"></line>
-      <polyline points="6 10 12 16 18 10"></polyline>
-    </svg>
-  `;
+  btn.style.cssText =
+    'position:fixed;top:14px;right:14px;width:38px;height:38px;' +
+    'border-radius:50%;background:#2a2a3a;color:#666;display:flex;' +
+    'align-items:center;justify-content:center;cursor:default;' +
+    'z-index:2147483647;box-shadow:0 2px 8px rgba(0,0,0,.4);' +
+    'opacity:.55;transition:all .2s;';
+  btn.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" ' +
+    'stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="15"/>' +
+    '<polyline points="6 10 12 16 18 10"/></svg>';
   document.documentElement.appendChild(btn);
 
-  function setEstado(estado) {
-    btn.classList.remove('xu-listo', 'xu-bajando');
-    if (estado === 'espera') {
-      btn.style.background = '#2a2a3a';
-      btn.style.color = '#555';
+  function estado(e) {
+    if (e === 'espera') {
+      btn.style.background = '#2a2a3a'; btn.style.color = '#666';
+      btn.style.cursor = 'default'; btn.style.opacity = '.55';
+      btn.title = 'XULADP - esperando video';
+    } else if (e === 'listo') {
+      btn.style.background = '#0f3460'; btn.style.color = '#00e5ff';
+      btn.style.cursor = 'pointer'; btn.style.opacity = '1';
+      btn.title = 'XULADP - clic para descargar';
+    } else if (e === 'bajando') {
+      btn.style.color = '#ffc107'; btn.style.cursor = 'wait';
+      btn.title = 'XULADP - descargando';
+    } else if (e === 'ok') {
+      btn.style.background = '#003320'; btn.style.color = '#00c853';
       btn.style.cursor = 'default';
-      btn.style.opacity = '0.5';
-      btn.title = 'XULADP — esperando vídeo (dale Play)';
-    } else if (estado === 'listo') {
-      btn.classList.add('xu-listo');
-      btn.style.background = '#0f3460';
-      btn.style.color = '#00e5ff';
+      btn.title = 'XULADP - completado';
+    } else if (e === 'error') {
+      btn.style.background = '#3a0f0f'; btn.style.color = '#f44';
       btn.style.cursor = 'pointer';
-      btn.style.opacity = '0.95';
-      btn.title = 'XULADP — clic para descargar';
-    } else if (estado === 'bajando') {
-      btn.classList.add('xu-bajando');
-      btn.style.background = '#0f3460';
-      btn.style.color = '#ffc107';
-      btn.style.cursor = 'wait';
-      btn.title = 'XULADP — descargando, no cierres la pestaña';
-    } else if (estado === 'ok') {
-      btn.style.background = '#003320';
-      btn.style.color = '#00c853';
-      btn.style.cursor = 'default';
-      btn.style.opacity = '0.85';
-      btn.title = 'XULADP — completado';
-    } else if (estado === 'error') {
-      btn.style.background = '#3a0f0f';
-      btn.style.color = '#f44';
-      btn.style.cursor = 'pointer';
-      btn.style.opacity = '0.95';
-      btn.title = 'XULADP — error, clic para reintentar';
+      btn.title = 'XULADP - error, clic para reintentar';
     }
   }
+  estado('espera');
 
-  setEstado('espera');
-
-  // --- nombre del fichero a partir del h1 del título -------------
-  function nombreFichero() {
-    // pruebo varias variantes del class porque Webex no es
-    // consistente entre vistas (recordingtitle / recordingTitle)
-    const h1 =
-      document.querySelector('h1.recordingtitle') ||
-      document.querySelector('h1.recordingTitle') ||
-      document.querySelector('h1[class*="recording" i]');
-    const base = h1 ? h1.innerText.trim() : 'webex_video';
-    return (
-      base.replace(/[^a-z0-9áéíóúñü ._-]/gi, '_').substring(0, 80) ||
-      'webex_video'
-    );
+  function nombre() {
+    var h1 = document.querySelector('h1.recordingtitle') ||
+             document.querySelector('h1.recordingTitle') ||
+             document.querySelector('h1[class*="recording" i]');
+    var t = h1 ? h1.innerText.trim() : 'webex_video';
+    return t.replace(/[^a-z0-9 ._-]/gi, '_').substring(0, 80) || 'webex_video';
   }
 
-  // --- descarga real (igual que en el bookmarklet) ----------------
-  function descargar(url) {
-    if (downloading || done) return;
-    downloading = true;
-    setEstado('bajando');
-
-    // ya no necesito seguir espiando fetch/XHR, restauro los originales
-    window.fetch = ORIGINAL_FETCH;
-    XMLHttpRequest.prototype.open = ORIGINAL_XHR_OPEN;
-
-    const nombre = nombreFichero();
-
-    ORIGINAL_FETCH(url, { credentials: 'include' })
-      .then((r) => {
+  function descargar() {
+    if (!videoUrl || working || done) return;
+    working = true;
+    estado('bajando');
+    window.fetch = origFetch;
+    XMLHttpRequest.prototype.open = origOpen;
+    var file = nombre();
+    origFetch(videoUrl, { credentials: 'include' })
+      .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.blob();
       })
-      .then((blob) => {
-        const a = document.createElement('a');
+      .then(function (blob) {
+        var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = nombre + '.mp4';
+        a.download = file + '.mp4';
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         done = true;
-        setEstado('ok');
+        estado('ok');
       })
-      .catch((e) => {
-        console.error('[XULADP]', e);
-        downloading = false;
-        setEstado('error');
+      .catch(function (err) {
+        console.error('[XULADP]', err);
+        working = false;
+        estado('error');
       });
   }
 
-  btn.addEventListener('click', () => {
-    if (downloading || done) return;
-    if (capturedUrl) descargar(capturedUrl);
-  });
+  btn.addEventListener('click', descargar);
 
-  // --- interceptar fetch y XHR para pillar la URL del mp4 ---------
-  function esUrlBuena(url) {
-    return (
-      typeof url === 'string' &&
-      url.indexOf('.mp4') !== -1 &&
-      url.indexOf('merge_') !== -1
-    );
+  function esBuena(u) {
+    return typeof u === 'string' && u.indexOf('.mp4') !== -1 && u.indexOf('merge_') !== -1;
   }
 
-  // OJO: descargamos en cuanto pillamos la URL, SIN esperar clic,
-  // porque el token de la URL caduca rápido. El botón es sobre
-  // todo indicador de estado + reintento.
-  window.fetch = function (...args) {
-    const url = typeof args[0] === 'string' ? args[0] : args[0] && args[0].url;
-    if (!capturedUrl && esUrlBuena(url)) {
-      capturedUrl = url;
-      setEstado('listo');
-      descargar(url);
-    }
-    return ORIGINAL_FETCH.apply(this, args);
+  window.fetch = function () {
+    var u = typeof arguments[0] === 'string' ? arguments[0] : (arguments[0] && arguments[0].url);
+    if (!videoUrl && esBuena(u)) { videoUrl = u; estado('listo'); }
+    return origFetch.apply(this, arguments);
   };
 
-  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-    if (!capturedUrl && esUrlBuena(url)) {
-      capturedUrl = url;
-      setEstado('listo');
-      descargar(url);
-    }
-    return ORIGINAL_XHR_OPEN.call(this, method, url, ...rest);
+  XMLHttpRequest.prototype.open = function (m, u) {
+    if (!videoUrl && esBuena(u)) { videoUrl = u; estado('listo'); }
+    return origOpen.apply(this, arguments);
   };
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[IO.File]::WriteAllBytes("icon.png", [Convert]::FromBase64String("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAE2ElEQVR42u2az29UVRTHP+fcN9NOWzrTogIJKhBiXGpiYsQg7FUSFzURVIJ/gmGl2AUJJirRBBNZiAETwwYICT8SSSShaURMmuhG7aLQphikgK0tFmjnvXNcvBlbbKF0mKGdyEleMsl7b+73e+/3nvO99z7htugIcCgBWLZq4/OOvYmw0WGNQA4QHky4w02BCzhnBP1maODMj//FyO2A0huPrtywVjLsAl4T1QzuuBsLESIKIrhZETjqRd6/+ntX33QSMh38stUvvuqS+VoltKXveAKiD7DnZ4wEuIEE1QzmyYh4cetQ//fHy5il/OORNetfDkQnwHCzGJGIxRTusahGoCTEr1y70H0SOoIAsuyJ9as80p+AVtwMJLAowxNEFRiT2J4dGuweUMBd2a0S5TFLFi94AAmYJSpR3pXdgMvyx9c9Z1H0A6Clqx7CANM4fkEthG2iIUozV72Eu2iILIRtCmxIsYvUDwGRUn9viBzWkub56sgnzDGFkqQarai74bA2EpGGqvbN6CiS2MzK4eBB8ZaWKo6DNFQ9149vfQtvz0PsU6p0h0iQ4VGajhytantVJ3Bj69vY0+1wY5ooDWgC7R1e/ARkdBSG83DTQEsMzOCWpveqHNW3CyGULpkiIAJB557glcxm6jweEnhI4P9OoPIsVKl1utN7FXrJygi4I8Uirjo/IO4QxzM5meFRVFGnRJWAJ5MhWboUmZyc2ejdcn0IeKEwDTlgjmWz6NgYFIvzJiGPrX7J5y2BOGb0k4+YXPcMMhbjYWokvLl5qoDNWIYYMj4+9VeJ4UsiMj2/UHh3e0UjMH8CqsitWyQrV/LnwQN4vhmK0/YtLHWes7c2LW14Ov5y4ybtm98h6u/Hc7nUdtQ0C5nhuRzh/HnyO3amoIpx6j5jvzP4Mujyc8UYImjt/JBMby/e1DRv8JWn0STB29poPHWKpn0HoT2CxO5NAiLps+0RTQcOkztxAmtvq3ihU3kdiGOsUGDJns/JdP0M+ZACm5O8QWsgc+43Wj79DGttvbf3alLIRHARCu99gP4xDI0CNkcazYKM/E1+RydiJct9H/sJ90fADBob0UuXaO3clVpouUtvukGj0rrzY0Lf+Yp1X10rkSR4oUDj6dM0f3EACgHiWfQcJ9AWaNp/mNzx43hbYdaitjBeqDQfWvbuJftdT0piuq6rrPvamDkRPETkd3Sig1chJ6k8aqD72hAwg4YG9MqVtD4AiJfmSXV1Xzs7nSR4Pk9Ddzcte/bBkgCF6uv+/qzEvdqN69cZ+epLrL3A0tc349lsWsSqvAVbGwIiyMQEyYoVeDZLNDBQkc9ZmG2VUsHy0nzAvWbgAdTdJ2pFgiiCTKZm4N19QgX6RLRshKtPojbHDiaiCPQp0JW6yPo64Cg53y7VJNnvlsT1dsDhlsSaJPv18sWzPbgfU80o7nEddH5cwnrs8sWzPQqIGNvN41FUQ3q4vWjRJ6gG83hUjO2kp/AdOjTY3W/YFkFFRMOiHAn3WESDoGLYlqHB7n7oUE2/OegI1y50n8QnNzkyoiEb/cv47qvcmsMuK0JDNnJkBJ/cVD6lh0NJaRPnV4eOMP7Xt71NzU8eQW05yFOiIZK0/i/QVFURDYpTdLcjXuSNK4Pd52b52KMc9fe5zT89F0UxuFzLCAAAAABJRU5ErkJggg=="))
