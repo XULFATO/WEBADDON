@@ -1,0 +1,237 @@
+
+manifest.json
+
+{
+  "manifest_version": 3,
+  "name": "XULADP — Webex Downloader",
+  "version": "5.4",
+  "description": "Captura y descarga grabaciones de Webex con el nombre real de la reunión. Uso personal.",
+  "content_scripts": [
+    {
+      "matches": ["*://*.webex.com/*"],
+      "js": ["content.js"],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ]
+}
+
+
+content.js
+
+// ============================================================
+// XULADP — Descargador de grabaciones Webex
+// v5.4 — pasado de bookmarklet a extensión (Manifest V3)
+// ============================================================
+//
+// Notas para mí (que si no en 3 meses no me acuerdo de nada):
+//
+// - "world": "MAIN" en el manifest hace que este script corra
+//   en el contexto REAL de la página, no en el mundo aislado
+//   de las extensiones. Lo necesito porque si no, el fetch que
+//   pisco no es el mismo fetch que usa Webex para pedir el vídeo
+//   (cada "mundo" tiene su propio window.fetch).
+//   Por eso aquí dentro NO puedo usar chrome.* (downloads, etc),
+//   estoy literalmente disfrazado de script de la página.
+//
+// - "run_at": "document_start" para que el parche de fetch/XHR
+//   esté puesto ANTES de que el reproductor de Webex pida nada.
+//   Si esto se inyecta tarde, me como la petición del vídeo y
+//   ya no hay segunda oportunidad.
+//
+// - Lo que cambia respecto al bookmarklet v5.3:
+//     1) el nombre del fichero ahora sale bien. El bug era que
+//        sólo miraba "h1.recordingtitle" (todo minúsculas) y a
+//        veces Webex lo pinta como "recordingTitle". Ahora
+//        pruebo varias variantes.
+//     2) fuera el panelazo verde de antes. Ahora hay un botón
+//        redondo abajo a la derecha, sin texto (solo una flecha),
+//        que cambia de color/animación según el estado. Discreto.
+//     3) probé a que esperara mi clic en vez de bajar sola, pero
+//        la URL del mp4 va con un token que caduca rápido y para
+//        cuando pulsaba ya había muerto (403). Así que sigue
+//        bajando sola en cuanto la pilla, como en el bookmarklet;
+//        el botón es sobre todo indicador de estado + reintento.
+//
+// - Si algún día hay varios vídeos en la misma página (tipo
+//   playlist de capítulos) esto sólo pilla el primero. Si pasa,
+//   recargar página entre vídeo y vídeo.
+// ============================================================
+
+(function () {
+  if (window._xuladpLoaded) return; // por si se inyecta dos veces
+  window._xuladpLoaded = true;
+
+  const ORIGINAL_FETCH = window.fetch;
+  const ORIGINAL_XHR_OPEN = XMLHttpRequest.prototype.open;
+
+  let capturedUrl = null;
+  let downloading = false;
+  let done = false;
+
+  // --- estilos del botón (inyectados una vez, con las animaciones) ---
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes _xuladp_spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes _xuladp_pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.85; } }
+    #_xuladp_btn { transition: background .25s ease, color .25s ease, opacity .25s ease; }
+    #_xuladp_btn.xu-listo { animation: _xuladp_pulse 2s ease-in-out infinite; }
+    #_xuladp_btn.xu-bajando svg { animation: _xuladp_spin 1s linear infinite; }
+  `;
+  document.documentElement.appendChild(style);
+
+  // --- el botón en sí: solo una flecha, sin texto, tooltip nativo ---
+  const btn = document.createElement('div');
+  btn.id = '_xuladp_btn';
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #2a2a3a;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    z-index: 2147483647;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+    opacity: 0.5;
+  `;
+  // flecha en SVG en vez de caracter unicode: así la puedo girar
+  // limpiamente cuando está "bajando" sin que se vea cutre
+  btn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+      <polyline points="6 10 12 16 18 10"></polyline>
+    </svg>
+  `;
+  document.documentElement.appendChild(btn);
+
+  function setEstado(estado) {
+    btn.classList.remove('xu-listo', 'xu-bajando');
+    if (estado === 'espera') {
+      btn.style.background = '#2a2a3a';
+      btn.style.color = '#555';
+      btn.style.cursor = 'default';
+      btn.style.opacity = '0.5';
+      btn.title = 'XULADP — esperando vídeo (dale Play)';
+    } else if (estado === 'listo') {
+      btn.classList.add('xu-listo');
+      btn.style.background = '#0f3460';
+      btn.style.color = '#00e5ff';
+      btn.style.cursor = 'pointer';
+      btn.style.opacity = '0.95';
+      btn.title = 'XULADP — clic para descargar';
+    } else if (estado === 'bajando') {
+      btn.classList.add('xu-bajando');
+      btn.style.background = '#0f3460';
+      btn.style.color = '#ffc107';
+      btn.style.cursor = 'wait';
+      btn.title = 'XULADP — descargando, no cierres la pestaña';
+    } else if (estado === 'ok') {
+      btn.style.background = '#003320';
+      btn.style.color = '#00c853';
+      btn.style.cursor = 'default';
+      btn.style.opacity = '0.85';
+      btn.title = 'XULADP — completado';
+    } else if (estado === 'error') {
+      btn.style.background = '#3a0f0f';
+      btn.style.color = '#f44';
+      btn.style.cursor = 'pointer';
+      btn.style.opacity = '0.95';
+      btn.title = 'XULADP — error, clic para reintentar';
+    }
+  }
+
+  setEstado('espera');
+
+  // --- nombre del fichero a partir del h1 del título -------------
+  function nombreFichero() {
+    // pruebo varias variantes del class porque Webex no es
+    // consistente entre vistas (recordingtitle / recordingTitle)
+    const h1 =
+      document.querySelector('h1.recordingtitle') ||
+      document.querySelector('h1.recordingTitle') ||
+      document.querySelector('h1[class*="recording" i]');
+    const base = h1 ? h1.innerText.trim() : 'webex_video';
+    return (
+      base.replace(/[^a-z0-9áéíóúñü ._-]/gi, '_').substring(0, 80) ||
+      'webex_video'
+    );
+  }
+
+  // --- descarga real (igual que en el bookmarklet) ----------------
+  function descargar(url) {
+    if (downloading || done) return;
+    downloading = true;
+    setEstado('bajando');
+
+    // ya no necesito seguir espiando fetch/XHR, restauro los originales
+    window.fetch = ORIGINAL_FETCH;
+    XMLHttpRequest.prototype.open = ORIGINAL_XHR_OPEN;
+
+    const nombre = nombreFichero();
+
+    ORIGINAL_FETCH(url, { credentials: 'include' })
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.blob();
+      })
+      .then((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nombre + '.mp4';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        done = true;
+        setEstado('ok');
+      })
+      .catch((e) => {
+        console.error('[XULADP]', e);
+        downloading = false;
+        setEstado('error');
+      });
+  }
+
+  btn.addEventListener('click', () => {
+    if (downloading || done) return;
+    if (capturedUrl) descargar(capturedUrl);
+  });
+
+  // --- interceptar fetch y XHR para pillar la URL del mp4 ---------
+  function esUrlBuena(url) {
+    return (
+      typeof url === 'string' &&
+      url.indexOf('.mp4') !== -1 &&
+      url.indexOf('merge_') !== -1
+    );
+  }
+
+  // OJO: descargamos en cuanto pillamos la URL, SIN esperar clic,
+  // porque el token de la URL caduca rápido. El botón es sobre
+  // todo indicador de estado + reintento.
+  window.fetch = function (...args) {
+    const url = typeof args[0] === 'string' ? args[0] : args[0] && args[0].url;
+    if (!capturedUrl && esUrlBuena(url)) {
+      capturedUrl = url;
+      setEstado('listo');
+      descargar(url);
+    }
+    return ORIGINAL_FETCH.apply(this, args);
+  };
+
+  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    if (!capturedUrl && esUrlBuena(url)) {
+      capturedUrl = url;
+      setEstado('listo');
+      descargar(url);
+    }
+    return ORIGINAL_XHR_OPEN.call(this, method, url, ...rest);
+  };
+})();
